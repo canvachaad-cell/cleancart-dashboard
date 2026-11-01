@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#090d16">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Clean Cart — Riyadh Operations Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22><text y=%2226%22 font-size=%2226%22>🚗</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Default Dark Mode Theme */
+    :root {
+      --background: #090d16;
+      --foreground: #f8fafc;
+      --card: #131c2e;
+      --card-muted: #1e293b;
+      --border: #223049;
+      --muted-foreground: #94a3b8;
+      --primary: #10b981;
+      --primary-foreground: #ffffff;
+      color-scheme: dark;
+    }
+    /* Optional Light Mode Toggle */
+    html.light {
+      --background: #f8fafc;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --card-muted: #f1f5f9;
+      --border: #e2e8f0;
+      --muted-foreground: #64748b;
+      --primary: #059669;
+      --primary-foreground: #ffffff;
+      color-scheme: light;
+    }
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bar-fill { transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+    .fade-in { animation: fadeIn 0.3s ease-out forwards; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .tab-btn.active { 
+      background: var(--primary); 
+      color: var(--primary-foreground); 
+      border-color: var(--primary); 
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+    }
+    .tab-btn { 
+      background: var(--card); 
+      color: var(--muted-foreground); 
+      border: 1px solid var(--border); 
+    }
+    .tab-btn:hover:not(.active) {
+      color: var(--foreground);
+      border-color: var(--muted-foreground);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .touch-scroll {
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+</head>
+<body class="antialiased px-3.5 sm:px-6 py-4 sm:py-6 max-w-5xl mx-auto min-h-screen">
+
+  <!-- HEADER -->
+  <header class="mb-4 sm:mb-6 pb-4 border-b border-[var(--border)]">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-lg sm:text-2xl font-bold text-[var(--foreground)] flex items-center gap-2">
+            <span>🚗</span> Clean Cart Operations Intelligence
+          </h1>
+        </div>
+        <p class="text-xs sm:text-sm text-[var(--muted-foreground)] mt-0.5">
+          LuLu Hypermarket, Riyadh · Ground-Truth Financials (Cost Base SAR 32,205)
+        </p>
+      </div>
+
+      <!-- Quick status badges on mobile & theme switcher -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="grid grid-cols-1 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 flex-1 sm:flex-none">
+          <div class="flex items-center justify-between sm:justify-start gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg sm:rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <span>Oct Revenue:</span>
+            <span>SAR 16,620 (578 Washes)</span>
+          </div>
+          <div class="flex items-center justify-between sm:justify-start gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg sm:rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
+            <span>Actual Costs:</span>
+            <span>SAR 32,205/mo</span>
+          </div>
+          <div class="flex items-center justify-between sm:justify-start gap-2 text-xs font-semibold px-3 py-1.5 rounded-lg sm:rounded-full bg-red-500/20 text-red-400 border border-red-500/40">
+            <span>Monthly Gap:</span>
+            <span>–SAR 15,585/mo</span>
+          </div>
+        </div>
+
+        <!-- Theme Switcher Button -->
+        <button onclick="toggleTheme()" id="theme-toggle" class="text-xs px-3 py-1.5 rounded-lg sm:rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-all flex items-center gap-1.5 shadow-sm" title="Toggle Light / Dark Mode">
+          <span id="theme-icon">🌙</span> <span id="theme-label" class="hidden sm:inline font-medium">Dark</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- QUICK EXECUTIVE SUMMARY BAR -->
+  <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-5 text-center">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 sm:p-3.5 shadow-sm flex flex-col justify-between">
+      <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] font-medium">October Revenue</div>
+      <div class="text-base sm:text-lg font-bold text-emerald-400 my-1">SAR 16,620</div>
+      <div class="text-[10px] sm:text-[11px] text-emerald-400 font-medium">578 Washes (18.7/day)</div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-red-500/30 rounded-xl p-3 sm:p-3.5 bg-red-500/5 shadow-sm flex flex-col justify-between">
+      <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] font-medium">Actual Monthly Costs</div>
+      <div class="text-base sm:text-lg font-bold text-red-400 my-1">SAR 32,205</div>
+      <div class="text-[10px] sm:text-[11px] text-red-400 font-medium">Column G Verified</div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-red-500/30 rounded-xl p-3 sm:p-3.5 bg-red-500/5 shadow-sm flex flex-col justify-between">
+      <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] font-medium">Current Monthly Gap</div>
+      <div class="text-base sm:text-lg font-bold text-red-400 my-1">–SAR 15,585</div>
+      <div class="text-[10px] sm:text-[11px] text-red-400 font-medium">Covers 51.6% of costs</div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-amber-500/30 rounded-xl p-3 sm:p-3.5 bg-amber-500/5 shadow-sm flex flex-col justify-between">
+      <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] font-medium">Break-Even Revenue</div>
+      <div class="text-base sm:text-lg font-bold text-amber-400 my-1">SAR 35,500</div>
+      <div class="text-[10px] sm:text-[11px] text-amber-400 font-medium">~40 cars/day target</div>
+    </div>
+
+    <div class="col-span-2 sm:col-span-1 bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 sm:p-3.5 shadow-sm flex flex-col justify-between">
+      <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] font-medium">Staff Cost Share</div>
+      <div class="text-base sm:text-lg font-bold text-[var(--foreground)] my-1">67.2%</div>
+      <div class="text-[10px] sm:text-[11px] text-[var(--muted-foreground)]">SAR 21,655 total package</div>
+    </div>
+  </section>
+
+  <!-- NAVIGATION TABS -->
+  <div class="sticky top-2 z-20 bg-[var(--background)]/90 backdrop-blur-md py-1.5 mb-4 -mx-1 px-1">
+    <nav class="flex gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar touch-scroll whitespace-nowrap pb-1">
+      <button onclick="showTab('costs')" class="tab-btn active text-xs sm:text-sm px-3.5 py-2 rounded-xl font-medium transition-all shrink-0 min-h-[38px] flex items-center gap-1.5" id="tab-costs">
+        <span>📊</span> Costs (SAR 32,205)
+      </button>
+      <button onclick="showTab('trend')" class="tab-btn text-xs sm:text-sm px-3.5 py-2 rounded-xl font-medium transition-all shrink-0 min-h-[38px] flex items-center gap-1.5" id="tab-trend">
+        <span>📈</span> Revenue & P&L
+      </button>
+      <button onclick="showTab('retention')" class="tab-btn text-xs sm:text-sm px-3.5 py-2 rounded-xl font-medium transition-all shrink-0 min-h-[38px] flex items-center gap-1.5" id="tab-retention">
+        <span>🔄</span> Repeat & Lapsed
+      </button>
+      <button onclick="showTab('mix')" class="tab-btn text-xs sm:text-sm px-3.5 py-2 rounded-xl font-medium transition-all shrink-0 min-h-[38px] flex items-center gap-1.5" id="tab-mix">
+        <span>🚗</span> Service & Days
+      </button>
+      <button onclick="showTab('turnaround')" class="tab-btn text-xs sm:text-sm px-3.5 py-2 rounded-xl font-medium transition-all shrink-0 min-h-[38px] flex items-center gap-1.5" id="tab-turnaround">
+        <span>🎯</span> Break-Even Path
+      </button>
+    </nav>
+  </div>
+
+  <!-- 1. ACTUAL COST STRUCTURE TAB -->
+  <main id="pane-costs" class="fade-in">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 sm:p-5 mb-4 shadow-sm">
+      <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+        <h2 class="text-sm sm:text-base font-semibold text-[var(--foreground)]">Ground-Truth Expenses Breakdown (Column G)</h2>
+        <span class="text-[11px] font-bold text-red-400 bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/30">Total: SAR 32,205 / mo</span>
+      </div>
+      <p class="text-xs text-[var(--muted-foreground)] mb-4">Actual recurring monthly expenses from <em>Clean Cart - Core Calculations.xlsx</em> (effective September onwards):</p>
+
+      <div class="space-y-3.5">
+        <div class="border border-red-500/30 rounded-xl p-3 sm:p-4 bg-red-500/5">
+          <div class="flex justify-between items-center mb-2 flex-wrap gap-1">
+            <span class="text-xs sm:text-sm font-bold text-red-400">👥 Total Staff Cost (Salaries + Housing + Food + Allowances)</span>
+            <span class="text-xs sm:text-sm font-bold text-red-400">SAR 21,655 (67.2%)</span>
+          </div>
+          <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden mb-3">
+            <div class="bar-fill h-full bg-red-500" style="width: 67.2%;"></div>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Contract Cleaners Salary (4 staff × 2,800)</span>
+              <span class="font-semibold">SAR 11,200</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Supervisors Salary (2 staff × 1,800)</span>
+              <span class="font-semibold">SAR 3,600</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Manager Salary (1 staff)</span>
+              <span class="font-semibold">SAR 2,500</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Supervisors Food Allowance (3 staff × 600)</span>
+              <span class="font-semibold text-amber-400">SAR 1,800</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Supervisors Accommodation</span>
+              <span class="font-semibold">SAR 950</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Manager Accommodation</span>
+              <span class="font-semibold">SAR 600</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Supervisors Mobile Data SIM (3 × 150)</span>
+              <span class="font-semibold">SAR 450</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Supervisors Transportation</span>
+              <span class="font-semibold">SAR 280</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Staff Flight Tickets Accrual (3 staff)</span>
+              <span class="font-semibold">SAR 250</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Staff Re-entry Charges Accrual</span>
+              <span class="font-semibold">SAR 25</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="border border-orange-500/30 rounded-xl p-3 sm:p-4 bg-orange-500/5">
+          <div class="flex justify-between items-center mb-1.5 flex-wrap gap-1">
+            <span class="text-xs sm:text-sm font-bold text-orange-400">🏬 LuLu Mall Bay Concession Rent (SAR 75k ÷ 12)</span>
+            <span class="text-xs sm:text-sm font-bold text-orange-400">SAR 6,250 (19.4%)</span>
+          </div>
+          <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+            <div class="bar-fill h-full bg-orange-500" style="width: 19.4%;"></div>
+          </div>
+          <p class="text-[11px] text-[var(--muted-foreground)] mt-2">Fixed lease payment to LuLu Hypermarket management.</p>
+        </div>
+
+        <div class="border border-blue-500/30 rounded-xl p-3 sm:p-4 bg-blue-500/5">
+          <div class="flex justify-between items-center mb-2 flex-wrap gap-1">
+            <span class="text-xs sm:text-sm font-bold text-blue-400">🧴 Operations, Materials, Marketing & Admin</span>
+            <span class="text-xs sm:text-sm font-bold text-blue-400">SAR 4,300 (13.4%)</span>
+          </div>
+          <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden mb-3">
+            <div class="bar-fill h-full bg-blue-500" style="width: 13.4%;"></div>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Material Cost (Car wash chemicals, towels, waxes)</span>
+              <span class="font-semibold">SAR 1,500</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Promotion Material & Marketing</span>
+              <span class="font-semibold">SAR 1,000</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Other Operating Charges</span>
+              <span class="font-semibold">SAR 1,000</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>Accounting / Bookkeeping</span>
+              <span class="font-semibold">SAR 600</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)]">
+              <span>CR & Regulatory Renewal (SAR 7,750 ÷ 12 amortized)</span>
+              <span class="font-semibold">SAR 200</span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-[var(--border)] text-[var(--muted-foreground)]">
+              <span>Saudi Salary / GOSI / Staff Levy</span>
+              <span class="font-semibold">SAR 0 (Exempt June–Oct)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center p-3 bg-[var(--card-muted)] rounded-xl border border-[var(--border)]">
+          <span class="text-xs sm:text-sm font-bold text-[var(--foreground)]">TOTAL ACTUAL EXPENSES:</span>
+          <span class="text-base sm:text-lg font-bold text-red-400">SAR 32,205 / month</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 2. REVENUE & P&L TAB -->
+  <section id="pane-trend" class="fade-in hidden">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 sm:p-5 mb-4 shadow-sm">
+      <h2 class="text-sm sm:text-base font-semibold text-[var(--foreground)] mb-1">5-Month Volume & Revenue Trajectory</h2>
+      <p class="text-xs text-[var(--muted-foreground)] mb-4">Actual wash volumes recorded across all 5 months:</p>
+      
+      <div class="space-y-3">
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-medium text-[var(--foreground)]">June 2026 (Launch)</span>
+            <span class="font-bold text-[var(--foreground)]">748 Washes <span class="text-[var(--muted-foreground)] font-normal">(25.8/day)</span></span>
+          </div>
+          <div class="h-2.5 bg-[var(--border)] rounded-full overflow-hidden">
+            <div class="bar-fill h-full rounded-full bg-blue-500" style="width: 86%;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-medium text-[var(--foreground)]">July 2026 (Peak)</span>
+            <span class="font-bold text-emerald-400">866 Washes <span class="text-[var(--muted-foreground)] font-normal">(27.9/day)</span></span>
+          </div>
+          <div class="h-2.5 bg-[var(--border)] rounded-full overflow-hidden">
+            <div class="bar-fill h-full rounded-full bg-emerald-500" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div >
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-medium text-[var(--foreground)]">August 2026 (Summer Slump)</span>
+            <span class="font-bold text-orange-400">465 Washes <span class="text-[var(--muted-foreground)] font-normal">(15.0/day · SAR 13,405)</span></span>
+          </div>
+          <div class="h-2.5 bg-[var(--border)] rounded-full overflow-hidden">
+            <div class="bar-fill h-full rounded-full bg-orange-400" style="width: 53.7%;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-medium text-[var(--foreground)]">September 2026 (Trough)</span>
+            <span class="font-bold text-orange-400">458 Washes <span class="text-[var(--muted-foreground)] font-normal">(15.3/day · SAR 12,820)</span></span>
+          </div>
+          <div class="h-2.5 bg-[var(--border)] rounded-full overflow-hidden">
+            <div class="bar-fill h-full rounded-full bg-orange-400" style="width: 52.9%;"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="font-medium text-[var(--foreground)]">October 2026 (Closed Rebound)</span>
+            <span class="font-bold text-emerald-400">578 Washes <span class="text-[var(--muted-foreground)] font-normal">(18.7/day · SAR 16,620)</span></span>
+          </div>
+          <div class="h-2.5 bg-[var(--border)] rounded-full overflow-hidden">
+            <div class="bar-fill h-full rounded-full bg-emerald-400" style="width: 66.7%;"></div>
+          </div>
+          <div class="text-[11px] text-emerald-400 mt-1 font-medium">█ +26.2% volume and +29.6% revenue growth over September!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 sm:p-5 shadow-sm">
+      <h2 class="text-sm sm:text-base font-semibold text-[var(--foreground)] mb-2">October 2026 Ground-Truth P&L</h2>
+      <div class="space-y-2 text-xs sm:text-sm">
+        <div class="flex justify-between py-1 border-b border-[var(--border)]">
+          <span class="text-[var(--foreground)] font-semibold">Actual Gross Revenue (578 Washes)</span>
+          <span class="font-bold text-emerald-400">+ SAR 16,620</span>
+        </div>
+        <div class="flex justify-between text-[var(--muted-foreground)]">
+          <span>– Total Staff Cost (Base + Housing + Food + SIM)</span>
+          <span class="text-red-400">– SAR 21,655</span>
+        </div>
+        <div class="flex justify-between text-[var(--muted-foreground)]">
+          <span>– LuLu Bay Concession Rent</span>
+          <span class="text-orange-400">– SAR 6,250</span>
+        </div>
+        <div class="flex justify-between text-xs sm:text-sm text-[var(--muted-foreground)]">
+          <span>– Operations, Materials, Promotion & Admin</span>
+          <span class="text-blue-400">– SAR 4,300</span>
+        </div>
+        <div class="flex justify-between py-2 border-t border-[var(--border)] font-bold text-sm sm:text-base">
+          <span class="text-red-400">October Net Monthly Cashflow Loss</span>
+          <span class="text-red-400">– SAR 15,585</span>
+        </div>
+      </div>
+      <p class="text-xs text-[var(--muted-foreground)] mt-2">
+        October revenue covered <strong>51.6%</strong> of your actual operating cost structure.
+      </p>
+    </div>
+  </section>
+
+  <!-- 3. REPEAT & RETENTION TAB -->
+  <section id="pane-retention" class="fade-in hidden">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 sm:p-5 mb-4 shadow-sm">
+      <h2 class="text-sm sm:text-base font-semibold text-[var(--foreground)] mb-1">Customer Retention Breakdown (1,091 Vehicles)</h2>
+      <p class="text-xs text-[var(--muted-foreground)] mb-3">Analysis of tracked vehicle plates between Aug 1 and Oct 29, 2026.</p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center mb-4">
+        <div class="p-3 rounded-xl bg-[var(--card-muted)] border border-[var(--border)]">
+          <div class="text-lg sm:text-xl font-bold text-red-400">948</div>
+          <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] mt-0.5">1 Visit Only (86.9%)</div>
+        </div>
+        <div class="p-3 rounded-xl bg-[var(--card-muted)] border border-[var(--border)]">
+          <div class="text-lg sm:text-xl font-bold text-blue-400">98</div>
+          <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] mt-0.5">2 Visits (Returning)</div>
+        </div>
+        <div class="p-3 rounded-xl bg-[var(--card-muted)] border border-[var(--border)]">
+          <div class="text-lg sm:text-xl font-bold text-violet-400">30</div>
+          <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] mt-0.5">3 Visits (Loyal)</div>
+        </div>
+        <div class="p-3 rounded-xl bg-[var(--card-muted)] border border-[var(--border)]">
+          <div class="text-lg sm:text-xl font-bold text-emerald-400">15</div>
+          <div class="text-[11px] sm:text-xs text-[var(--muted-foreground)] mt-0.5">4+ Visits (Champions)</div>
+        </div>
+      </div>
+
+      <h3 class="text-xs sm:text-sm font-semibold text-[var(--foreground)] mb-2">Repeat Job Share is Accelerating:</h3>
+      <div class="overflow-x-auto no-scrollbar touch-scroll border border-[var(--border)] rounded-xl">
+        <table class="w-full text-xs sm:text-sm text-left min-w-[360px]">
+          <thead class="bg-[var(--card-muted)] text-[var(--muted-foreground)] border-b border-[var(--border)]">
+            <tr>
+              <th class="py-2.5 px-3 font-medium">Month</th>
+              <th class="py-2.5 px-3 font-medium">Total Jobs</th>
+              <th class="py-2.5 px-3 font-medium">New</th>
+              <th class="py-2.5 px-3 font-medium">Repeat</th>
+              <th class="py-2.5 px-3 font-medium">Repeat %</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--border)]">
+            <tr>
+              <td class="py-2 px-3 font-semibold">August</td>
+              <td class="px-3">408</td>
+              <td class="px-3">383</td>
+              <td class="px-3 text-amber-400 font-semibold">25</td>
+              <td class="px-3 text-amber-400 font-semibold">6.1%</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-3 font-semibold">September*ܺ+td>
+              <td class="px-3">409</td>
+              <td class="px-3">330</td>
+              <td class="px-3 text-blue-400 font-semibold">79</td>
+              <td class="px-3 text-blue-400 font-semibold">19.3%</td>
+            </tr>
+            <tr>
+              <td class="py-2 px-3 font-semibold">October</td>
+              <td class="px-3">492</td>
+              <td class="px-3">378</td>
+              <td class="px-3 text-emerald-400 font-semibold">114</td>
+              <td class="px-3 text-emerald-400 font-semibold">23.2%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-emerald-400 font-medium mt-2">
+        ♌ In October, nearly 1 out of every 4 cars washed was a new/returning repeat customer!
+      </p>
+    </div>
+
+    <div class="bg-gradient-to-r from-emerald-500/10 to-blue-500/10 border border-emerald-500/30 rounded-xl p-3.5 sm:p-5 shadow-sm">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl sm:text-3xl shrink-0">📱</span>
+        <div>
+          <h3 class="text-sm sm:text-base font-bold text-emerald-400">Fastest Cash Opportunity: 326 Lapsed WhatsApp Contacts</h3>
+          <p class="text-xs sm:text-sm text-[var(--foreground)] mt-1">
+            Your repeat workbook has <strong>326 customers with valid mobile numbers</strong> who haven't returned in 30+ days, plus <strong>39 overdue regular customers</strong>.
+          </p>
+          <div class="mt-3 text-xs sm:text-sm bg-[var(--card)] p-3 rounded-xl border border-[var(--border)]">
+            <span class="font-semibold text-emerald-400">The WhatsApp Re-engagement Math:</span>
+            <ul class="list-disc list-inside mt-1.5 space-y-1 text-[var(--muted-foreground)]">
+              <li>Offer: <em>"We miss you at Clean Cart LuLu! Free interior dashboard conditioning & scent with your wash this week."</em></li>
+              <li>A 15% response rate = <strong>~49 returning cars</strong>.</li>
+              <li>At SAR 35 (Int+Ext) = <strong>+SAR 1,715 immediate cash injection</strong>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. SERVICE & DAY PATTERNS TAB -->
+  <section id="pane-mix" class="fade-in hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 sm:p-5 shadow-sm">
+        <h2 class="text-sm sm:text-base font-semibold text-[var(--foreground)] mb-1">Day-of-Week Demand (All 150 Days)</h2>
+        <p class="text-xs text-[var(--muted-foreground)] mb-3">LuLu Riyadh shopping patterns dictate daily volume:</p>
+        
+        <div class="space-y-2.5 text-xs sm:text-sm">
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span class="font-bold text-emerald-400">Saturday (Peak Day)</span>
+              <span class="font-bold text-emerald-400">30.4 cars/day avg</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-emerald-500" style="width: 100%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+            <span class="font-semibold text-blue-400">Thursday (Weekend start)</span>
+            <span class="font-semibold text-blue-400">24.0 cars/day avg</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-blue-400" style="width: 79%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span class="font-semibold text-blue-400">Friday (Family shopping)</span>
+              <span class="font-semibold text-blue-400">22.7 cars/day avg</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-blue-400" style="width: 75%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span class="text-[var(--muted-foreground)]">Wednesday</span>
+              <span>17.5 cars/day</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-amber-400" style="width: 58%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span class="text-[var(--muted-foreground)]">Monday</span>
+              <span>17.1 cars/day</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-amber-400" style="width: 56%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span class="text-[var(--muted-foreground)]">Tuesday</span>
+              <span>17.0 cars/day</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-amber-400" style="width: 56%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span class="text-red-400">Sunday (Slowest Day)</span>
+              <span class="text-red-400">15.3 cars/day</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-red-400" style="width: 50%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 sm:p-5 shadow-sm">
+        <h2 class="text-sm sm:text-base font-semibold text-[var(--foreground)] mb-1">October Full Month Mix (578 Washes)</h2>
+        <p class="text-xs text-[var(--muted-foreground)] mb-3">Actual breakdown of packages sold across all 31 days:</p>
+
+        <div class="space-y-3 text-xs sm:text-sm">
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span>🚗 Sedan Exterior (SAR 25)</span>
+              <span class="font-bold">345 (59.7%) · SAR 8,625</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-blue-500" style="width: 59.7%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span>🚥 Sedan Int + Ext (SAR 35)</span>
+              <span class="font-bold">123 (21.3%) · SAR 4,305</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-emerald-500" style="width: 21.3%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span>🚙 SUV Exterior (SAR 30)</span>
+              <span class="font-bold">71 (12.3%) · SAR 2,130</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-violet-400" style="width: 12.3%;"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between mb-0.5">
+              <span>🚙 SUV Int + Ext (SAR 40)</span>
+              <span class="font-bold">39 (6.7%) · SAR 1,560</span>
+            </div>
+            <div class="h-2 bg-[var(--border)] rounded-full overflow-hidden">
+              <div class="bar-fill h-full bg-violet-600" style="width: 6.7%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-[var(--border)] flex justify-between text-xs sm:text-sm flex-wrap gap-2">
+          <span class="text-[var(--muted-foreground)]">Exterior: <strong class="text-[var(--foreground)]">72% (416)</strong></span>
+          <span class="text-[var(--muted-foreground)]">Int + Ext: <strong class="text-emerald-400">28% (162)</strong></span>
+          <span class="text-[var(--muted-foreground)]">Avg Ticket: <strong class="text-emerald-400">SAR 28.75</strong></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. PATH TO BREAK-EVEN TAB -->
+  <section id="pane-turnaround" class="fade-in hidden">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 sm:p-5 mb-4 shadow-sm">
+      <h2 class="text-sm sm:text-base font-semibold text-[var(--foreground)] mb-2">🎯 The Realistic Path to Break-Even (Covering SAR 32,205)</h2>
+      <p class="text-xs text-[var(--muted-foreground)] mb-4">To eliminate the SAR 15,585 monthly loss, you have two simultaneous paths:</p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+        <div class="p-3.5 sm:p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
+          <h3 class="text-xs sm:text-sm font-bold text-emerald-400 mb-1.5">Path A: Growing Revenue to SAR 35,500</h3>
+          <ul class="text-xs space-y-2 text-[var(--foreground)]">
+            <li>• <strong>At Current SAR 28.75 avg ticket:</strong> You need <strong>1,235 washes/mo</strong> (~40 cars/day).</li>
+            <li>• <strong>If you push Interior Upsell to SAR 35.00 avg ticket:</strong> You only need <strong>1,014 washes/mo</strong> (~33 cars/day).</li>
+            <li>• <strong>Precedent:</strong> You already reached <strong>866 washes</strong> in July with zero marketing. 1,000 washes at LuLu is completely achievable!</li>
+          </ul>
+        </div>
+
+        <div class="p-3.5 sm:p-4 rounded-xl border border-red-500/30 bg-red-500/5">
+          <h3 class="text-xs sm:text-sm font-bold text-red-400 mb-1.5">Path B: Optimizing the SAR 21,655 Staff Package</h3>
+          <ul class="text-xs space-y-2 text-[var(--foreground)]">
+            <li>• <strong>Staff Ratio:</strong> 1 Manager + 2 Supervisors manage 4 Cleaners who wash ~4.7 cars/day.</li>
+            <li>• <strong>Supervisors Package:</strong> Base (3,600) + Food (1,800) + Housing (950) + SIM (450) + Transport (280) = <strong>SAR 7,080/month</strong>.</li>
+            <li>• <strong>Action:</strong> If 1 supervisor position is converted to an active sales/upsell role or streamlined, you save <strong>SAR 3,500/month</strong> immediately, dropping break-even to ~29 cars/day!</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="text-center text-xs text-[var(--muted-foreground)] pt-4 pb-4 border-t border-[var(--border)]">
+    Clean Cart Riyadh · Operations Intelligence · LuLu Hypermarkeet Bay
+  </footer>
+
+  <script>
+    function showTab(name) {
+      ['costs','trend','retention','mix','turnaround'].forEach(t => {
+        const pane = document.getElementById('pane-'+t);
+        const tab = document.getElementById('tab-'+t);
+        if (pane) pane.classList.add('hidden');
+        if (tab) tab.classList.remove('active');
+      });
+      const targetPane = document.getElementById('pane-'+name);
+      const targetTab = document.getElementById('tab-'+name);
+      if (targetPane) targetPane.classList.remove('hidden');
+      if (targetTab) {
+        targetTab.classList.add('active');
+        targetTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.toggle('light');
+      localStorage.setItem('cleancart-theme', isLight ? 'light' : 'dark');
+      updateThemeUI(isLight);
+    }
+
+    function updateThemeUI(isLight) {
+      const icon = document.getElementById('theme-icon');
+      const label = document.getElementById('theme-label');
+      if (icon) icon.textContent = isLight ? '☀️' : '🌙';
+      if (label) label.textContent = isLight ? 'Light' : 'Dark';
+    }
+
+    // Default to dark theme on every device load
+    (function() {
+      const saved = localStorage.getItem('cleancart-theme');
+      if (saved === 'light') {
+        document.documentElement.classList.add('light');
+        updateThemeUI(true);
+      } else {
+        document.documentElement.classList.remove('light');
+        updateThemeUI(false);
+      }
+    })();
+  </script>
+</body>
+</html>
